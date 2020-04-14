@@ -12,6 +12,7 @@ static JComboBox baud1, baud2;
 static JButton connectButton1, connectButton2;
 static JTextArea logText1, logText2; 
 static JTextField sendText1, sendText2;
+static JButton reflesSerialListButton;
 
 static JButton sendButton1, sendButton2;
 
@@ -19,12 +20,13 @@ Serial serial1, serial2;
 String msg1, msg2;
 
 long serialListAutoLoader;
+String[] serialList;
 
 void setup() { 
   surface.setVisible(false);
 
   GuiListener listener = new GuiListener(this);
-  String[] serialList = Serial.list();
+  serialList = Serial.list();
 
   JPanel p1 = new JPanel();
   p1.setLayout(null);
@@ -140,7 +142,11 @@ void setup() {
     sendButton2.setBounds(600, 715, 200, 20);
     sendButton2.setEnabled(false);
     sendButton2.addActionListener(listener); 
-    
+
+    reflesSerialListButton = new JButton("Reflesh Serial List");
+    reflesSerialListButton.setBounds(20, 745, 1120, 20);
+    reflesSerialListButton.addActionListener(listener); 
+
     p1.add(label2);
     p1.add(serialList2);
     p1.add(baud2);
@@ -148,6 +154,7 @@ void setup() {
     p1.add(logText2);
     p1.add(sendText2);
     p1.add(sendButton2);
+    p1.add(reflesSerialListButton);
   }
   
   f = new JFrame("Dual Serial Monitor"); 
@@ -157,15 +164,6 @@ void setup() {
 }
 
 void draw() {
-  /*if (millis() - serialListAutoLoader > 5000) {
-    String[] serialList = Serial.list();
-    
-    DefaultComboBoxModel model = new DefaultComboBoxModel( serialList );
-    serialList1.setModel( model );
-    serialList2.setModel( model );
-    
-    serialListAutoLoader = millis();
-  }*/
 }
 
 void serialEvent(Serial _serialPort) {
@@ -175,5 +173,29 @@ void serialEvent(Serial _serialPort) {
   }
   else if (_serialPort.equals(serial2)) {
     logText2.setText(logText2.getText() + str);
+  }
+}
+
+void refleshSerialList() {
+  if (serialList != Serial.list()) {
+    serialList = Serial.list();
+
+    {
+      DefaultComboBoxModel model = new DefaultComboBoxModel( serialList );
+      String selectedItem = (String)serialList1.getSelectedItem();
+      serialList1.setModel(model);
+      if (selectedItem != null) {
+        serialList1.setSelectedItem(selectedItem);
+      }
+    }
+  
+    {
+      DefaultComboBoxModel model = new DefaultComboBoxModel( serialList );
+      String selectedItem = (String)serialList2.getSelectedItem();
+      serialList2.setModel(model);
+      if (selectedItem != null) {
+        serialList2.setSelectedItem(selectedItem);
+      }
+    }
   }
 }

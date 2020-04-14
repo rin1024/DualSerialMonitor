@@ -158,5 +158,8 @@ class GuiListener implements ItemListener, ChangeListener, ActionListener, KeyLi
         sendText2.setText("");
       }
     }
+    else if (e.getSource() == reflesSerialListButton) {
+      refleshSerialList();
+    }
   }
 }  
