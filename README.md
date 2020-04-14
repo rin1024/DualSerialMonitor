@@ -4,7 +4,7 @@ Dual Serial Monitor is enable to use 2 serial console at the same time.
 
 ### Usage
 
-[![Watch the video](doc/ss_dual_serial_monitor.png)](doc/usage_dual_serial_monitor.mov)
+![](doc/usage_dual_serial_monitor.gif)
 
 ### Plugins
 
