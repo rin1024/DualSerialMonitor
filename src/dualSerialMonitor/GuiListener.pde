@@ -6,35 +6,24 @@ class GuiListener implements ItemListener, ChangeListener, ActionListener, KeyLi
   }
 
   void itemStateChanged(ItemEvent e) { 
-    /*if (e.getSource() == c1) {
-     println(c1.getSelectedItem() + " selected");
-     }
-     else if (e.getSource() == c2) {
-     println(c2.getSelectedItem() + " selected");
-     }*/
+
   }
 
   void stateChanged(ChangeEvent e) {
-    /*if (e.getSource() == b1) {
-     println("b1 changed");
-     }
-     else if (e.getSource() == b2) {
-     println("b2 changed");
-     }*/
+
   }
-  
+
+  /**
+   * テキストボックス内でのエンターキー押下によるコマンド送信
+   */
   void keyPressed(java.awt.event.KeyEvent e) {
     if(e.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
-      if (e.getSource() == sendText1) {
-        if (serial1 != null) {
-          serial1.write(sendText1.getText() + "\r\n");
-          sendText1.setText("");
-        }
-      }
-      else if (e.getSource() == sendText2) {
-        if (serial2 != null) {
-          serial2.write(sendText2.getText() + "\r\n");
-          sendText2.setText("");
+      for (int i=0;i<serialMonitors.length;i++) {
+        if (e.getSource() == serialMonitors[i].sendText) {
+          if (serialMonitors[i].serialPort != null) {
+            serialMonitors[i].serialPort.write(serialMonitors[i].sendText.getText() + "\r\n");
+            serialMonitors[i].sendText.setText("");
+          }
         }
       }
     }
@@ -44,122 +33,80 @@ class GuiListener implements ItemListener, ChangeListener, ActionListener, KeyLi
     if(e.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
     }
   }
-  
+
   void keyTyped(java.awt.event.KeyEvent e) {
     if(e.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
     }
   }
 
   void actionPerformed(ActionEvent e) {
-    if (e.getSource() == serialList1) {
-      println("serialList1 " + serialList1.getSelectedItem() + " selected");
-    } else if (e.getSource() == serialList2) {
-      println("serialList2 " + serialList2.getSelectedItem() + " selected");
-    }
-    // LOG1の接続にチャレンジ
-    else if (e.getSource() == connectButton1) {
-      if (connectButton1.getText().equals(BUTTON_LABEL_CONNECT)) {
-        try {
-          println(" => try to connect ");         
-          String targetPort = (String)serialList1.getSelectedItem();
-          int baudRate = Integer.parseInt((String)baud1.getSelectedItem());
-          if (serial1 == null) {
-            serial1 = new Serial(pa, targetPort, baudRate);
-
-            label1.setText("LOG1(Connect to: " + targetPort + ")");
-
-            connectButton1.setText(BUTTON_LABEL_RELEASE);
-            //connectButton1.setEnabled(false);
-            
-            sendText1.setEnabled(true);
-            sendText1.setBackground(Color.white);
-            sendButton1.setEnabled(true);
-          }
-        }
-        catch (Exception e2) {
-          logText1.setText(logText1.getText() + "\r\n[error]" + e2);
-        }
-      }
-      else {
-        if (serial1 != null) {
-          try {
-            serial1.stop();
-            serial1.dispose();
-            serial1 = null;
-  
-            label1.setText("LOG1");
-  
-            connectButton1.setText(BUTTON_LABEL_CONNECT);
-            
-            sendText1.setEnabled(false);
-            sendText1.setBackground(Color.gray);
-            sendButton1.setEnabled(false);
-          }
-          catch (Exception e2) {
-            logText1.setText(logText1.getText() + "\r\n[error]" + e2);
-          }
-        }
-      }
-    }
-    // LOG2の接続にチャレンジ
-    else if (e.getSource() == connectButton2) {
-      if (connectButton2.getText().equals(BUTTON_LABEL_CONNECT)) {
-        try {
-          println(" => try to connect ");         
-          String targetPort = (String)serialList2.getSelectedItem();
-          int baudRate = Integer.parseInt((String)baud2.getSelectedItem());
-          if (serial2 == null) {
-            serial2 = new Serial(pa, targetPort, baudRate);
-
-            label2.setText("LOG2(Connect to: " + targetPort + ")");
-
-            connectButton2.setText(BUTTON_LABEL_RELEASE);
-            //connectButton2.setEnabled(false);
-            
-            sendText2.setEnabled(true);
-            sendText2.setBackground(Color.white);
-            sendButton2.setEnabled(true);
-          }
-        }
-        catch (Exception e2) {
-          logText2.setText(logText2.getText() + "\r\n[error]" + e2);
-        }
-      }
-      else {
-        if (serial2 != null) {
-          try {
-            serial2.stop();
-            serial2.dispose();
-            serial2 = null;
-  
-            label2.setText("LOG2");
-  
-            connectButton2.setText(BUTTON_LABEL_CONNECT);
-            
-            sendText2.setEnabled(false);
-            sendText2.setBackground(Color.gray);
-            sendButton2.setEnabled(false);
-          }
-          catch (Exception e2) {
-            logText2.setText(logText2.getText() + "\r\n[error]" + e2);
-          }
-        }
-      }
-    }
-    else if (e.getSource() == sendButton1) {
-      if (serial1 != null) {
-        serial1.write(sendText1.getText());
-        sendText1.setText("");
-      }
-    }
-    else if (e.getSource() == sendButton2) {
-      if (serial2 != null) {
-        serial2.write(sendText2.getText());
-        sendText2.setText("");
-      }
-    }
-    else if (e.getSource() == reflesSerialListButton) {
+    // シリアルポートの呼びなおしボタンが押された
+    if (e.getSource() == reflesSerialListButton) {
       refleshSerialList();
+      return;
+    }
+
+    for (int i=0;i<serialMonitors.length;i++) {
+      // セレクトボックスで任意のシリアルポートが選択された
+      if (e.getSource() == serialMonitors[i].serialListBox) {
+        println("serialListBox " + serialMonitors[i].serialListBox.getSelectedItem() + " selected");
+      }
+      // [connect]ボタンが押された
+      else if (e.getSource() == serialMonitors[i].connectButton) {
+        // 接続状態でなければ、接続試行開始
+        if (serialMonitors[i].connectButton.getText().equals(BUTTON_LABEL_CONNECT)) {
+          try {
+            println(" => try to connect ");
+
+            String targetPort = (String)serialMonitors[i].serialListBox.getSelectedItem();
+            int baudRate = Integer.parseInt((String)serialMonitors[i].baudRateBox.getSelectedItem());
+            if (serialMonitors[i].serialPort == null) {
+              serialMonitors[i].serialPort = new Serial(pa, targetPort, baudRate);
+
+              serialMonitors[i].captionText.setText("Monitor" + serialMonitors[i].id + "(Connect to: " + targetPort + ")");
+
+              // ボタンのラベルを[release]に変更
+              serialMonitors[i].connectButton.setText(BUTTON_LABEL_RELEASE);
+
+              // 送信の枠を有効に
+              serialMonitors[i].sendText.setEnabled(true);
+              serialMonitors[i].sendText.setBackground(Color.white);
+              serialMonitors[i].sendButton.setEnabled(true);
+            }
+          }
+          catch (Exception e2) {
+            serialMonitors[i].logText.setText(serialMonitors[i].logText.getText() + "\r\n[error]" + e2);
+          }
+        }
+        // 接続を閉じる
+        else {
+          if (serialMonitors[i].serialPort != null) {
+            try {
+              serialMonitors[i].serialPort.stop();
+              serialMonitors[i].serialPort.dispose();
+              serialMonitors[i].serialPort = null;
+
+              serialMonitors[i].captionText.setText("Monitor" + serialMonitors[i].id);
+
+              serialMonitors[i].connectButton.setText(BUTTON_LABEL_CONNECT);
+
+              serialMonitors[i].sendText.setEnabled(false);
+              serialMonitors[i].sendText.setBackground(Color.gray);
+              serialMonitors[i].sendButton.setEnabled(false);
+            }
+            catch (Exception e2) {
+              serialMonitors[i].logText.setText(serialMonitors[i].logText.getText() + "\r\n[error]" + e2);
+            }
+          }
+        }
+      }
+      // 送信ボタンが押された
+      else if (e.getSource() == serialMonitors[i].sendButton) {
+        if (serialMonitors[i].serialPort != null) {
+          serialMonitors[i].serialPort.write(serialMonitors[i].sendText.getText());
+          serialMonitors[i].sendText.setText("");
+        }
+      }
     }
   }
 }  
